@@ -1,0 +1,13 @@
+variables:
+  project: eu
+  author: "eu de novo"
+
+templates:
+  primeira:
+    pattern: "{scope} teste aqui {message}"
+    prefix: "antes do texto"
+    suffix: "depois do texto"
+  segunda:
+    pattern: "{scope} {message}"
+    prefix: ""
+    suffix: ""

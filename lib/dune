@@ -1,0 +1,5 @@
+(library
+ (name axis)
+ (libraries yaml core)
+ (preprocess (pps ppx_deriving.show))
+ (flags (:standard -warn-error -A)))
