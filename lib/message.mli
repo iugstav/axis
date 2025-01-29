@@ -33,4 +33,5 @@ module Parser : sig
 
   val init : Scanner.token list -> Config.t -> t
   val parse : t -> t
+  val build : t -> string
 end

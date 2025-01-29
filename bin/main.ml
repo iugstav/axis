@@ -18,4 +18,4 @@ let () =
         Format.printf "%s | %s" (Config.cause_to_string err.cause) err.message;
         exit 1
   in
-  print_endline (Message.Parser.show result)
+  Message.Parser.build result |> print_endline

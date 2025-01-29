@@ -100,6 +100,11 @@ module Parser = struct
     | UserMessage of string
   [@@deriving show]
 
+  let pattern_to_string = function
+    | Text t -> t
+    | Variable v -> v
+    | UserMessage um -> um
+
   type t = {
     variables : (string * string) list;
     template : Config.template;
@@ -159,4 +164,6 @@ module Parser = struct
     else
       let position = p.pos + skip in
       { p with pos = position; actual = List.nth p.tokens position }
+
+  let build p = List.map p.values ~f:pattern_to_string |> String.concat ~sep:""
 end
