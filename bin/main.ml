@@ -8,12 +8,14 @@ let () =
     | Ok data -> Config.parse_yaml_data data
     | Error (`Msg msg) -> failwith msg
   in
-  let scanner =
+  let result =
     match parsed_config with
-    | First cfg -> Message.Scanner.init cfg.template.pattern
+    | First cfg ->
+        let open Message in
+        let scanner = Scanner.init cfg.template.pattern |> Scanner.scan in
+        Parser.init scanner.tokens cfg |> Parser.parse
     | Second err ->
         Format.printf "%s | %s" (Config.cause_to_string err.cause) err.message;
         exit 1
   in
-  let result = Message.Scanner.scan scanner in
-  print_endline (Message.Scanner.show result)
+  print_endline (Message.Parser.show result)
