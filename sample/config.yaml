@@ -4,7 +4,7 @@ variables:
 
 templates:
   primeira:
-    pattern: "{scope} teste aqui {message}"
+    pattern: "{project} teste aqui {author}"
     prefix: "antes do texto"
     suffix: "depois do texto"
   segunda:
