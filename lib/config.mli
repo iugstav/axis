@@ -10,8 +10,8 @@ type template = {
 type t = { variables : (string * string) list; template : template }
 [@@deriving show]
 
-type err_cause = NotFound | ForbbidenName | InvalidFormat | Unindentified
-type parser_error = { cause : err_cause; message : string }
+type err_cause = NotFound | InvalidFormat
+type config_error = { cause : err_cause; message : string }
 
-val cause_to_string : err_cause -> string
-val parse_yaml_data : string -> Yaml.value -> (t, parser_error) Base.Either.t
+val format_error : config_error -> string
+val parse_yaml_data : string -> Yaml.value -> (t, config_error) Base.Either.t
