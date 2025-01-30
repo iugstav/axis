@@ -14,4 +14,4 @@ type err_cause = NotFound | ForbbidenName | InvalidFormat | Unindentified
 type parser_error = { cause : err_cause; message : string }
 
 val cause_to_string : err_cause -> string
-val parse_yaml_data : Yaml.value -> (t, parser_error) Base.Either.t
+val parse_yaml_data : string -> Yaml.value -> (t, parser_error) Base.Either.t

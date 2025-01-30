@@ -82,7 +82,7 @@ let get_template name = function
               name;
         }
 
-let parse_yaml_data d =
+let parse_yaml_data templ_name d =
   let variables =
     match Yaml.Util.find "variables" d with
     | Ok v -> v >>= get_tuple |> Option.value ~default:[]
@@ -92,7 +92,7 @@ let parse_yaml_data d =
     match Yaml.Util.find "templates" d with
     | Ok value -> (
         match value with
-        | Some v -> get_template "primeira" v
+        | Some v -> get_template templ_name v
         | None -> failwith "não achou na template")
     | Error (`Msg msg) -> failwith msg
   in
