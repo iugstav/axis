@@ -1,5 +1,5 @@
 (executable
  (public_name axis)
  (name main)
- (libraries axis yaml core))
+ (libraries axis yaml core cmdliner))
 
