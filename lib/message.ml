@@ -192,6 +192,7 @@ module Parser = struct
       { p with pos = position; actual = List.nth p.tokens position }
 
   let build p user_message =
-    List.map p.values ~f:(pattern_to_string user_message)
+    let lst = List.map p.values ~f:(pattern_to_string user_message) in
+    p.template.prefix :: List.rev (p.template.suffix :: lst)
     |> String.concat ~sep:""
 end
