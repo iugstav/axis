@@ -33,5 +33,6 @@ module Parser : sig
 
   val init : Scanner.token list -> Config.t -> t
   val parse : t -> t
-  val build : t -> string
+  val build : t -> string -> string
+  val parse_errors : error list -> string list
 end

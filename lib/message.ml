@@ -65,9 +65,6 @@ module Scanner = struct
         scan scanner
     | None -> s
 
-  and curr s =
-    if s.pos < String.length s.pattern then Some s.pattern.[s.pos] else None
-
   and next s =
     if s.pos = String.length s.pattern - 1 then { s with ch = None }
     else
@@ -94,16 +91,13 @@ module Parser = struct
   type error_position = { tok : Scanner.token; pos : int } [@@deriving show]
   type error = { at : error_position; cause : string } [@@deriving show]
 
-  type pattern_values =
-    | Text of string
-    | Variable of string
-    | UserMessage of string
+  type pattern_values = Text of string | Variable of string | UserMessage
   [@@deriving show]
 
-  let pattern_to_string = function
+  let pattern_to_string um = function
     | Text t -> t
     | Variable v -> v
-    | UserMessage um -> um
+    | UserMessage -> um
 
   type t = {
     variables : (string * string) list;
@@ -128,6 +122,20 @@ module Parser = struct
       pos = 0;
     }
 
+  let parse_errors err_l =
+    let f err =
+      let token_name =
+        match err.at.tok with
+        | Rbrace -> "right brace"
+        | Lbrace -> "left brace"
+        | Value v -> Format.sprintf "value %s" v
+        | Text t -> Format.sprintf "text %s" t
+      in
+      Format.sprintf "in %s at position %d ::: %s" token_name err.at.pos
+        err.cause
+    in
+    List.map err_l ~f
+
   let rec parse p =
     match p.actual with
     | Some tk ->
@@ -143,21 +151,39 @@ module Parser = struct
                     String.equal name v)
               in
               match variable with
-              | Some (_, value) -> add_variable p value |> next
+              | Some (name, value) ->
+                  if has_invalid_name name then
+                    {
+                      at = { tok = tk; pos = p.pos };
+                      cause =
+                        Format.sprintf
+                          "your variable named '%s' conflicts with template \
+                           field names. Please use another name."
+                          name;
+                    }
+                    |> add_error p |> next ~skip:2
+                  else add_variable p value |> next ~skip:2
               | None ->
-                  {
-                    at = { tok = tk; pos = p.pos };
-                    cause = Format.sprintf "Unknown variable with name '%s'" v;
-                  }
-                  |> add_error p |> next)
+                  if String.equal v "message" then
+                    add_usermessage p |> next ~skip:2
+                  else
+                    {
+                      at = { tok = tk; pos = p.pos };
+                      cause = Format.sprintf "Unknown variable '%s'" v;
+                    }
+                    |> add_error p |> next)
         in
         parse parser
     | None -> p
 
+  and add_usermessage p = { p with values = UserMessage :: p.values }
   and add_variable p v = { p with values = Variable v :: p.values }
   and add_text p t = { p with values = Text t :: p.values }
   and add_error p err = { p with errors = err :: p.errors }
-  and has_errors p = List.length p.errors > 0
+
+  and has_invalid_name variable =
+    let fields = [ "suffix"; "prefix"; "pattern" ] in
+    List.exists fields ~f:(fun name -> String.equal variable name)
 
   and next ?(skip = 1) p =
     if p.pos + skip >= List.length p.tokens - 1 then { p with actual = None }
@@ -165,5 +191,7 @@ module Parser = struct
       let position = p.pos + skip in
       { p with pos = position; actual = List.nth p.tokens position }
 
-  let build p = List.map p.values ~f:pattern_to_string |> String.concat ~sep:""
+  let build p user_message =
+    List.map p.values ~f:(pattern_to_string user_message)
+    |> String.concat ~sep:""
 end
