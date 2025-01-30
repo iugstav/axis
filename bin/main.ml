@@ -1,21 +1,38 @@
-open Core
 open Axis
+open Core
 
-let () =
-  let yaml_string = In_channel.read_all "sample/config.yaml" in
-  let parsed_config =
-    match Yaml.of_string yaml_string with
-    | Ok data -> Config.parse_yaml_data data
-    | Error (`Msg msg) -> failwith msg
+let get_yaml_config templ yaml =
+  match Yaml.of_string yaml with
+  | Ok data -> Config.parse_yaml_data templ data
+  | Error (`Msg msg) -> failwith msg
+
+let run template_name user_message =
+  let yaml =
+    In_channel.read_all "sample/config.yaml" |> get_yaml_config template_name
   in
   let result =
-    match parsed_config with
-    | First cfg ->
+    match yaml with
+    | First config ->
         let open Message in
-        let scanner = Scanner.init cfg.template.pattern |> Scanner.scan in
-        Parser.init scanner.tokens cfg |> Parser.parse
+        let scanner = Scanner.init config.template.pattern |> Scanner.scan in
+        Parser.init scanner.tokens config |> Parser.parse
     | Second err ->
         Format.printf "%s | %s" (Config.cause_to_string err.cause) err.message;
         exit 1
   in
-  Message.Parser.build result |> print_endline
+  if List.is_empty result.errors then
+    Message.Parser.build result user_message |> print_endline
+  else Message.Parser.parse_errors result.errors |> List.iter ~f:print_endline
+
+let cmd =
+  let open Commands in
+  let open Cmdliner in
+  let info =
+    Cmd.info "axis" ~version:"1.0.0"
+      ~doc:
+        "formats your commit message based on your templates in the \
+         configuration file"
+  in
+  Cmd.v info Term.(const run $ templ_name $ user_message)
+
+let () = exit (Cmdliner.Cmd.eval cmd)
