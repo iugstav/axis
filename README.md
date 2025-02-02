@@ -1,5 +1,7 @@
 <h1 align="center">Axis (em alpha ⚠️)</h1>
 
+(Versão em inglês)[README_EN.md]
+
 **Axis** é uma ferramenta de linha de comando para padronização de mensagens de commit em projetos Git. Ela permite definir formatos de commit personalizados a partir de um arquivo de configuração YAML.
 
 ## Instalação
@@ -8,7 +10,7 @@ Por agora ainda não existe um binário a disponibilizar. então você deverá c
 ### Pré-requisitos
 - Ocaml
 - Dune
-- Pacotes como [Core](https://ocaml.org/p/core/latest), [Yaml](https://ocaml.org/p/yaml/latest/doc/Yaml/index.html) e [Cmdliner](https://ocaml.org/u/f06857371084eb01bbf1461eed1e6df0/cmdliner/1.0.4/doc/Cmdliner/index.html)
+- Os pacotes [Core](https://ocaml.org/p/core/latest), [Yaml](https://ocaml.org/p/yaml/latest/doc/Yaml/index.html) e [Cmdliner](https://ocaml.org/u/f06857371084eb01bbf1461eed1e6df0/cmdliner/1.0.4/doc/Cmdliner/index.html)
 
 ## Funcionalidades
 Atualmente o programa só possui um commando, que é o de formatar. Mas como isso é feito?
@@ -27,7 +29,7 @@ templates:
     suffix: "Feito por <algum nome de time do trabalho>"
 ```
 
-Destrinchando eessa configuração de cima para baixo, vemos:
+Destrinchando eessa configuração de cima para baixo, temos:
 
 #### Variáveis
 Formas de armazenar um valor para compartilhar entre padrões ou agilizar o processo de escrita. O campo onde serão declaradas as varáveis deve receber o nome "variables", exatamente como está no exemplo.
