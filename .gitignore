@@ -1,2 +1,3 @@
 _build/
 axis.opam
+.axis.yaml
