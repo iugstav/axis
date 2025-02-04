@@ -4,6 +4,7 @@ module Scanner : sig
 
   type t = {
     pattern : string;
+    p_length : int;
     tokens : token list;
     errors : error list;
     ch : char option;
@@ -21,9 +22,9 @@ module Parser : sig
   type pattern_values [@@deriving show]
 
   type t = {
-    variables : (string * string) list;
+    variables : (string * string) array;
     template : Config.template;
-    tokens : Scanner.token list;
+    tokens : Scanner.token array;
     values : pattern_values list;
     errors : error list;
     pos : int;
@@ -31,7 +32,7 @@ module Parser : sig
   }
   [@@deriving show]
 
-  val init : Scanner.token list -> Config.t -> t
+  val init : Scanner.token array -> Config.t -> t
   val parse : t -> t
   val build : t -> string -> string
   val parse_errors : error list -> string list

@@ -8,6 +8,7 @@ module Scanner = struct
 
   type t = {
     pattern : string;
+    p_length : int;
     tokens : token list;
     errors : error list;
     ch : char option;
@@ -15,14 +16,23 @@ module Scanner = struct
   }
   [@@deriving show]
 
-  let is_bracket ch = Char.equal ch '{' || Char.equal ch '}'
-  let is_text ch = not (is_bracket ch)
-  let add_token s tok = { s with tokens = tok :: s.tokens }
-  let add_error s err = { s with errors = err :: s.errors }
+  let[@inline] is_bracket ch = Char.equal ch '{' || Char.equal ch '}'
+  let[@inline] is_text ch = not (is_bracket ch)
+  let[@inline] add_token s tok = { s with tokens = tok :: s.tokens }
+  let[@inline] add_error s err = { s with errors = err :: s.errors }
 
   let init p =
-    let state = { pattern = p; tokens = []; errors = []; ch = None; pos = 0 } in
-    if String.length p = 0 then state else { state with ch = Some p.[0] }
+    let state =
+      {
+        pattern = p;
+        p_length = String.length p;
+        tokens = [];
+        errors = [];
+        ch = None;
+        pos = 0;
+      }
+    in
+    if state.p_length = 0 then state else { state with ch = Some p.[0] }
 
   let rec scan s =
     match s.ch with
@@ -66,21 +76,26 @@ module Scanner = struct
     | None -> s
 
   and next s =
-    if s.pos = String.length s.pattern - 1 then { s with ch = None }
+    if s.pos = s.p_length - 1 then { s with ch = None }
     else
       let p = s.pos + 1 in
       { s with pos = p; ch = Some s.pattern.[p] }
 
-  and search s condition =
-    let rec loop s = if condition s.ch then loop (next s) else s in
+  (*and search s condition =*)
+  (*  let rec loop s = if condition s.ch then loop (next s) else s in*)
+  (*  let scanner = loop s in*)
+  (*  (scanner, scanner.pos)*)
+
+  and search_text s =
+    let rec loop s =
+      match s.ch with Some c when is_text c -> loop (next s) | _ -> s
+    in
     let scanner = loop s in
     (scanner, scanner.pos)
 
   and read_string s =
     let init_pos = s.pos in
-    let scanner, end_pos =
-      search s (fun ch -> match ch with Some c -> is_text c | None -> false)
-    in
+    let scanner, end_pos = search_text s in
     let chopped_data =
       String.sub s.pattern ~pos:init_pos ~len:(end_pos - init_pos)
     in
@@ -100,9 +115,9 @@ module Parser = struct
     | UserMessage -> um
 
   type t = {
-    variables : (string * string) list;
+    variables : (string * string) array;
     template : Config.template;
-    tokens : Scanner.token list;
+    tokens : Scanner.token array;
     values : pattern_values list;
     errors : error list;
     pos : int;
@@ -111,14 +126,14 @@ module Parser = struct
   [@@deriving show]
 
   let init tokens (config : Config.t) =
-    let tokens = List.rev tokens in
+    let tokens = Array.rev tokens in
     {
       tokens;
       values = [];
-      variables = config.variables;
+      variables = Array.of_list config.variables;
       template = config.template;
       errors = [];
-      actual = List.nth tokens 0;
+      actual = Some (Array.get tokens 0);
       pos = 0;
     }
 
@@ -146,7 +161,7 @@ module Parser = struct
           | Text t -> add_text p t |> next
           | Value v -> (
               let variable =
-                List.find p.variables ~f:(fun var ->
+                Array.find p.variables ~f:(fun var ->
                     let name, _ = var in
                     String.equal name v)
               in
@@ -186,10 +201,10 @@ module Parser = struct
     List.exists fields ~f:(fun name -> String.equal variable name)
 
   and next ?(skip = 1) p =
-    if p.pos + skip >= List.length p.tokens - 1 then { p with actual = None }
+    if p.pos + skip >= Array.length p.tokens - 1 then { p with actual = None }
     else
       let position = p.pos + skip in
-      { p with pos = position; actual = List.nth p.tokens position }
+      { p with pos = position; actual = Some (Array.get p.tokens position) }
 
   let build p user_message =
     let lst = List.map p.values ~f:(pattern_to_string user_message) in

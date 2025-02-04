@@ -17,14 +17,14 @@ let get_yaml_config templ yaml =
 
 let run template_name user_message =
   let yaml =
-    In_channel.read_all "sample/config.yaml" |> get_yaml_config template_name
+    In_channel.read_all ".axis.yaml" |> get_yaml_config template_name
   in
   let result =
     match yaml with
     | First config ->
         let open Message in
         let scanner = Scanner.init config.template.pattern |> Scanner.scan in
-        Parser.init scanner.tokens config |> Parser.parse
+        Parser.init (Array.of_list scanner.tokens) config |> Parser.parse
     | Second err ->
         print_endline (Config.format_error err);
         exit 1
